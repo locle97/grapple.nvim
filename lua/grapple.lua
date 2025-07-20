@@ -356,25 +356,26 @@ function Grapple.statusline(opts)
     end
 
     local current = Grapple.find({ buffer = 0 })
+    local total = #tags
+    local current_index = nil
 
-    local quick_select = app.settings:quick_select()
-    local output = {}
-
-    for i, tag in ipairs(tags) do
-        -- stylua: ignore
-        local tag_str = tag.name and tag.name
-            or quick_select[i] and quick_select[i]
-            or i
-
-        local tag_fmt = opts.inactive
-        if current and current.path == tag.path then
-            tag_fmt = opts.active
+    -- Find current tag index
+    if current then
+        for i, tag in ipairs(tags) do
+            if current.path == tag.path then
+                current_index = i
+                break
+            end
         end
-
-        table.insert(output, string.format(tag_fmt, tag_str))
     end
 
-    local statusline = table.concat(output)
+    local statusline
+    if current_index then
+        statusline = string.format("[%d] of [%d]", current_index, total)
+    else
+        statusline = string.format("[-] of [%d]", total)
+    end
+
     if opts.include_icon then
         statusline = string.format("%s %s", opts.icon, statusline)
     end
