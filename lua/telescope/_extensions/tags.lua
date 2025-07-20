@@ -27,15 +27,32 @@ local function create_finder()
         entry_maker = function(result)
             local utils = require("telescope.utils")
 
+            local index = result[1]
             local filename = result[2]
             local lnum = result[3]
 
             local entry = {
                 value = result,
                 ordinal = filename,
-                display = utils.transform_path({ path_display = {} }, filename),
                 filename = filename,
                 lnum = lnum,
+                index = index,
+                path = filename,
+                display = function(entry)
+                    local hl = {}
+                    local relative_path = utils.transform_path({ path_display = { "truncate" } }, entry.filename)
+                    local filename_only = vim.fn.fnamemodify(entry.filename, ":t")
+                    local display_str = string.format("[%d] %s %s", entry.index, filename_only, relative_path)
+                    local filename_start = string.len(string.format("[%d] ", entry.index))
+                    local filename_end = filename_start + string.len(filename_only)
+
+                    -- Highlight filename in bold
+                    table.insert(hl, { { filename_start, filename_end }, "TelescopeResultsIdentifier" })
+                    -- Highlight path in comment color
+                    table.insert(hl, { { filename_end + 1, string.len(display_str) }, "Comment" })
+
+                    return display_str, hl
+                end,
             }
 
             return entry
